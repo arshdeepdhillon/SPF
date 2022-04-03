@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SPF</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="add_route">Add route</string>
+    <string name="enter_route_title">Route title…</string>
+    <string name="enter_group_title">Title Of Route</string>
+    <string name="address">Address</string>
+    <string name="navigate">Navigate</string>
 </resources>

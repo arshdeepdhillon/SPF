@@ -1,60 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp"
     tools:context="com.spf.app.MainActivity">
 
-    <!--    <Button-->
-    <!--        android:id="@+id/bttn"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:text="Open"/>-->
-
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/groups_recycler"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/linear_container"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp">
+        android:layout_height="match_parent" />
 
-        <TextView
-            android:id="@+id/txt_data"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="temp text"
-            android:textColor="@color/black"
-            android:textSize="22sp" />
-    </ScrollView>
-
-    <LinearLayout
-        android:id="@+id/linear_container"
-        android:layout_width="match_parent"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_route"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
+        android:layout_margin="12dp"
+        android:clickable="true"
+        android:contentDescription="@string/add_route"
+        android:src="@drawable/ic_round_add_circle_outline_24"
+        app:layout_constraintBottom_toBottomOf="@id/groups_recycler"
+        app:layout_constraintEnd_toEndOf="@id/groups_recycler" />
 
 
-        <Button
-            android:id="@+id/bttn_direction"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:layout_weight="1"
-            android:text="Direction"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/bttn_capture"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:layout_weight="1"
-            android:text="Capture" />
-
-    </LinearLayout>
-
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
