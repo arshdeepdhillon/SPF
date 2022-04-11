@@ -22,8 +22,7 @@ android {
         }
         python {
             pip {
-                // A requirement specifier, with or without a version number:
-                install "WazeRouteCalculator"
+                install "WazeRouteCalculator==0.15"
             }
             pyc {
                 // TODO set it to true when creating an APK
@@ -61,7 +60,7 @@ dependencies {
 
     // Testing
     testImplementation "junit:junit:$rootProject.junitVersion"
-    androidTestImplementation "androidx.test.ext:$rootProject.androidxJunitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espressoVersion"
 
     // Don't use this yet. Will need to migrate from Mobile Vision api to mlkit
