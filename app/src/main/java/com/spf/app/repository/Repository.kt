@@ -11,15 +11,6 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
     val allGroups: LiveData<List<RouteGroup>> = group.getAll()
     fun allRoutesInGroup(id: Long): LiveData<List<RouteInfo>> = route.allRoutesInGroup(id)
 
-    @WorkerThread
-    suspend fun getRoutesInGroup(id: Long): List<RouteInfo> = route.routesInGroup(id)
-
-//
-//
-//@WorkerThread
-//suspend fun getRouteByGroupId(id: Long): RouteInfo? = route.getByGroupId(id)
-
-
     // Group related
 
     @WorkerThread
@@ -38,7 +29,10 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
     // Route related
 
     @WorkerThread
-    suspend fun createRoute(data: RouteInfo) = route.create(data)
+    suspend fun getRoutesInGroup(id: Long): List<RouteInfo> = route.routesInGroup(id)
+
+    @WorkerThread
+    suspend fun createRoute(groupId: Long, address: String) = route.create(groupId, address)
 
     @WorkerThread
     suspend fun deleteRoute(id: Long) = route.delete(id)
@@ -63,7 +57,8 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
     suspend fun getRoutesInGroupByOpt(groupId: Long) = route.getRoutesInGroupByOpt(groupId)
 
     @WorkerThread
-    suspend fun getRoutesInGroupByOptWithoutCurrLocation(groupId: Long) = route.getRoutesInGroupByOptWithoutCurrLocation(groupId)
+    suspend fun getRoutesInGroupByOptWithoutCurrLocation(groupId: Long) =
+        route.getRoutesInGroupByOptWithoutCurrLocation(groupId)
 
 
     @WorkerThread
@@ -71,5 +66,8 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
         route.updateOptIndex(routeId, newOptimalIndex)
     }
 
-
+    @WorkerThread
+    suspend fun updateAddressUiState(groupId: Long) {
+        route.updateAddressUiState(groupId)
+    }
 }

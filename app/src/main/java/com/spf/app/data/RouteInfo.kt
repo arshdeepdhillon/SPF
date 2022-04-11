@@ -15,4 +15,6 @@ data class RouteInfo(
     val optIndex: Long,
     @ColumnInfo(name = "groupId")
     val groupId: Long,
+    @ColumnInfo(name = "dragState", defaultValue = "false")
+    val dragState: Boolean,
 )

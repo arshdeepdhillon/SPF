@@ -4,7 +4,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -27,7 +26,6 @@ import com.google.android.gms.vision.text.TextRecognizer
 import com.spf.app.MainActivity.Companion.GROUP_ID
 import com.spf.app.RouteApplication
 import com.spf.app.adapter.RouteInfoAdapter
-import com.spf.app.data.RouteInfo
 import com.spf.app.databinding.ActivityShowRoutesBinding
 import com.spf.app.util.LK
 import com.spf.app.viewModel.RouteVM
@@ -38,10 +36,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.UP
+import androidx.recyclerview.widget.ItemTouchHelper.DOWN
 
+import androidx.recyclerview.widget.RecyclerView
+import com.spf.app.adapter.IRouteListener
+import java.util.BitSet
 
-class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener {
-
+class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
     private val TAG = "AddRoutesActivity"
     private val camReqCode: Int = 100
     private lateinit var wazeRouteCalculator: PyObject
@@ -54,6 +57,60 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
         RouteVMFactory((application as RouteApplication).repository)
     }
 
+    /** Allows us to drag items in RecyclerView */
+    private val itemTouchCallBack: ItemTouchHelper by lazy {
+        val simpleItemTouchHelper = object : ItemTouchHelper.SimpleCallback(UP or DOWN, 0) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder,
+            ): Boolean {
+                val fromPos = viewHolder.bindingAdapterPosition
+                val toPos = target.bindingAdapterPosition
+                // Move item in `fromPos` to `toPos` in adapter.
+                adapter.notifyItemMoved(fromPos, toPos)
+
+                Log.d(TAG, "onMove: $fromPos -> $toPos")
+                return true
+            }
+
+            // Bypass long press so we can immediately execute drag events on touch
+            override fun isLongPressDragEnabled(): Boolean {
+                return false
+            }
+
+            // Not implementing, ignore it
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+
+            // Not implementing, so do not allow left and right swipes
+            override fun getSwipeDirs(
+                recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+            ) = 0
+
+            override fun clearView(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+            ) {
+                Log.d(TAG, "clearView: ")
+                adapter.onDrop()
+                super.clearView(recyclerView, viewHolder)
+            }
+        }
+        ItemTouchHelper(simpleItemTouchHelper)
+    }
+
+    companion object {
+        /** IDs of views that changed */
+        const val DRAG_STATE_CHANGED = "DRAG_STATE"
+
+        /** User interaction with a view has started */
+        val START_ANIM: BitSet = BitSet(2) //0x00
+
+        /** User interaction with a view is over */
+        val STOP_ANIM: BitSet = BitSet(2).apply { set(0) } //0x01
+
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityShowRoutesBinding.inflate(layoutInflater)
@@ -62,7 +119,6 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
-
         // TODO lazily use these objects!
         py = Python.getInstance()
         wazeRouteCalculator = py.getModule("WazeRouteCalculator")
@@ -79,8 +135,9 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
         adapter = RouteInfoAdapter(this)
         binding.routesRecycler.adapter = adapter
         binding.routesRecycler.layoutManager = LinearLayoutManager(this)
+        itemTouchCallBack.attachToRecyclerView(binding.routesRecycler)
         viewModel.setRouteGroupId(groupId)
-        showNavBttn()
+        showNavButton()
         // TODO On configuration, get data from RouteVM.cache instead of DB
 //        viewModel.viewModelScope.launch { viewModel.triggerInitRoutesInGroupEvent() }
         viewModel.allRoutesInGroup.observe(this) { groups ->
@@ -144,6 +201,19 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
                     binding.routeGroupTitleEditText.text.toString())
             }
         }
+//        lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                viewModel.addressUiState.collect { state ->
+//                    Log.d(TAG, "onCreate: ${state}")
+//                    when (state) {
+//                        is UiState.AddressDragUiState -> {
+//                            adapter.newUiState(state)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
         when {
             savedInstanceState != null -> {
                 savedInstanceState.let {
@@ -156,7 +226,7 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
                 }
             }
             groupId != invalidId -> {
-                setupView(groupId)
+                setupViewInit(groupId)
             }
             else -> {
                 if (groupId == invalidId) {
@@ -168,46 +238,6 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
                 }
             }
         }
-
-
-//        _direction.setOnClickListener {
-////            val adrs = """
-////            1102 Aviation Blvd NE
-////            7 Aspen Summit Ct SW
-////            142 Bridleridge Cir SW
-////            109 11 Ave SE""".trimIndent()
-//            val adrs = """
-//            5877 Grousewoods Dr, North Vancouver, BC
-//            83 Broadway St W, Nakusp, BC
-//            2911 Weather Hill, West Kelowna, BC
-//            403 Eveline St, Selkirk, MB
-//            """.trimIndent()
-//            val str = buildGoogleMapUrl(adrs)
-//
-//            //TODO use a DP? (also try 2/3-opt ???) for TSP algo, then pass the distance matrix from getDistanceMatrix() to that algo
-//            //getDistanceMatrix(adrs)
-//
-//            //TODO uncomment me when trying to parse from _capturedAddresses.
-//            //val str = buildGoogleMapUrl(_capturedAddresses.text.toString())
-//            val gmmIntentUri = Uri.parse(str)
-//            val intent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-//
-//            //TODO since we are using Google map URL, don't need this. Let the device decide where to show directions (Google map app or a browser)
-//            //intent.setPackage("com.google.android.apps.maps")
-//            try {
-//                startActivity(intent)
-//            } catch (ex: ActivityNotFoundException) {
-//                try {
-//                    val unrestrictedIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-//                    startActivity(unrestrictedIntent)
-//                } catch (innerEx: ActivityNotFoundException) {
-//                    Toast.makeText(this, "Please install a maps application", Toast.LENGTH_LONG)
-//                        .show()
-//                }
-//            }
-//        }
-//    }
-
     }
 
     private fun launchMap(mapUrlStr: String) {
@@ -229,34 +259,35 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
         }
     }
 
-    private fun setupView(id: Long) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val routeGroup = viewModel.getGroup(id)
-            withContext(Dispatchers.Main) {
-                if (routeGroup != null) {
-                    Log.d(TAG, "setupView: Setup route title")
-                    binding.routeGroupTitleEditText.setText(routeGroup.title)
-                    //TODO initialize address
-                } else {
-                    Log.e(TAG, "Route Group ID not found in DB: $id")
-                    Toast.makeText(applicationContext,
-                        "Failed to load addresses",
-                        Toast.LENGTH_LONG).show()
-                    val replyIntent = Intent()
-                    setResult(RESULT_CANCELED, replyIntent)
-                    finish()
+    /** @see com.spf.app.adapter.IRouteListener.addressChanged */
+    override fun addressChanged(addressId: Long, changedAddress: String) {
+        viewModel.updateRouteAddress(addressId, changedAddress)
+    }
+
+    /** @see com.spf.app.adapter.IRouteListener.deleteAddress */
+    override fun deleteAddress(id: Long) {
+        viewModel.deleteRoute(id)
+    }
+
+    /** @see com.spf.app.adapter.IRouteListener.handleTouch */
+    override fun handleTouch(event: BitSet, routeViewHolder: RouteInfoAdapter.RouteViewHolder?) {
+        when (event) {
+            START_ANIM -> {
+                Log.d(TAG, "handleTouch: START_ANIM")
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    viewModel.updateAddressUiState(groupId)
+                    withContext(Dispatchers.Main) {
+                        itemTouchCallBack.startDrag(routeViewHolder!!)
+                    }
+                }
+            }
+            STOP_ANIM -> {
+                Log.d(TAG, "handleTouch: STOP_ANIM")
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    viewModel.updateAddressUiState(groupId)
                 }
             }
         }
-    }
-
-
-    override fun onRouteInfoClicked(id: Long) {
-        // Do nothing
-    }
-
-    override fun onAddressChanged(currAddressId: Long, changedAddress: String) {
-        viewModel.updateRouteAddress(currAddressId, changedAddress)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -285,38 +316,56 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
                     } else {
                         insertAddresses(capturedAddresses.split("\n"))
                     }
-
-
                 }
             }
-
         }
     }
 
+    //TODO shouldn't need this. Utilize livedata
+    /** Initializes the views */
+    private fun setupViewInit(id: Long) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val routeGroup = viewModel.getGroup(id)
+            withContext(Dispatchers.Main) {
+                if (routeGroup != null) {
+                    Log.d(TAG, "setupView: Setup route title")
+                    binding.routeGroupTitleEditText.setText(routeGroup.title)
+                    //TODO initialize address
+                } else {
+                    Log.e(TAG, "Route Group ID not found in DB: $id")
+                    Toast.makeText(applicationContext,
+                        "Failed to load addresses",
+                        Toast.LENGTH_LONG).show()
+                    val replyIntent = Intent()
+                    setResult(RESULT_CANCELED, replyIntent)
+                    finish()
+                }
+            }
+        }
+    }
+
+    /** Inserts address retrieved from captured image */
     private fun insertAddresses(addrs: List<String>) {
-        addrs.forEach {
-            viewModel.createRoute(RouteInfo(0, it, 0L, groupId))
+        if (!addrs.isNullOrEmpty()) {
+            addrs.forEach { viewModel.createRoute(groupId, it) }
+            showNavButton()
         }
-        if (addrs.isNotEmpty()) showNavBttn()
     }
 
-    private fun hideNavBttn() {
+    private fun hideNavButton() {
         if (binding.fabNavigate.isEnabled) {
             binding.fabNavigate.isEnabled = false
             binding.fabNavigate.visibility = View.INVISIBLE
         }
     }
 
-    private fun showNavBttn() {
+    private fun showNavButton() {
         if (!binding.fabNavigate.isEnabled) {
             binding.fabNavigate.isEnabled = true
             binding.fabNavigate.visibility = View.VISIBLE
         }
     }
 
-    /**
-     *
-     */
     private fun getTextFromBitmap(bm: Bitmap): String {
         val recognizer = TextRecognizer.Builder(this).build()
         val str = StringBuilder()
@@ -336,7 +385,7 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
 
     /**
      * Builds a cross-platform Google maps direction URL with multiple waypoints starting from current location.
-     * @param addrs A newline separated list of address or coordinates
+     * @param addresses A newline separated list of address or coordinates
      * @return
      */
     private fun buildGoogleMapUrl(addresses: MutableList<String>): String {
@@ -417,20 +466,13 @@ class ShowRoutesActivity : AppCompatActivity(), RouteInfoAdapter.IRouteListener 
                     Log.d(TAG, "No distance found: (${addresses[start]} -> ${addresses[end]})")
                 } else {
                     val (time, dist) = route
-                    Log.d(TAG, "$time mins, $dist km: (${addresses[start]} -> ${addresses[end]})")
+                    Log.d(TAG,
+                        "$time mins, $dist km: (${addresses[start]} -> ${addresses[end]})")
                     disMatrix[start][end] = (dist * scaleMatrix).toInt()
                     disMatrix[end][start] = disMatrix[start][end]
                 }
             }
         }
-
-//        for (r in disMatrix) {
-//            for (i in r) {
-//                print(i)
-//                print("\t")
-//            }
-//            println()
-//        }
         return disMatrix
     }
 }

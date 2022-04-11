@@ -7,19 +7,6 @@
     android:paddingLeft="8dp"
     android:paddingRight="8dp">
 
-
-    <!--        <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-    <!--            android:id="@+id/fab_direction"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:layout_alignParentEnd="true"-->
-    <!--            android:layout_alignParentBottom="true"-->
-    <!--            android:layout_marginEnd="161dp"-->
-    <!--            android:layout_marginBottom="299dp"-->
-    <!--            android:clickable="true"-->
-    <!--            android:contentDescription="@string/take_photo"-->
-    <!--            android:src="@drawable/ic_round_directions_24" />-->
-
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/route_group_title_layout_text"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -41,10 +28,9 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/routes_recycler"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/route_group_title_layout_text"
         app:layout_constraintStart_toStartOf="@+id/route_group_title_layout_text"

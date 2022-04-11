@@ -1,6 +1,8 @@
 package com.spf.app.data
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 @Entity(tableName = "routeGroup")
 data class RouteGroup(
@@ -16,11 +18,4 @@ data class RouteGroup(
 //    val lastModified: String,
 //    @ColumnInfo(name = "pinned")
 //    val pinned: Boolean,
-)
-
-data class RoutesInGroup(
-    @Embedded
-    val routeGroup: RouteGroup,
-    @Relation(parentColumn = "groupId", entityColumn = "routeId")
-    val routes: List<RouteInfo>,
 )

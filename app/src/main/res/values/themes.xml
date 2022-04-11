@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-<!--    <style name="Theme.SPF" parent="Theme.MaterialComponents.Light.NoActionBar">-->
+    <!--    <style name="Theme.SPF" parent="Theme.MaterialComponents.Light.NoActionBar">-->
     <style name="Theme.SPF" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/teal</item>
@@ -19,5 +19,16 @@
     <style name="TabLayout" parent="Widget.Design.TabLayout">
         <item name="tabGravity">fill</item>
         <item name="tabMaxWidth">0dp</item>
+    </style>
+
+    <style name="Widget.App.Button.OutlinedButton.IconOnly" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="iconPadding">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="strokeWidth">0.0dp</item>
     </style>
 </resources>

@@ -28,6 +28,7 @@ class RouteGroupAdapter(private val listener: IRouteListener) :
         }
     }
 
+    //TODO extract outside of class and create RouteGroup's own activity
     interface IRouteListener {
         fun onRouteGroupClicked(id: Long)
     }

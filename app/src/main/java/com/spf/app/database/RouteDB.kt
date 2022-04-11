@@ -58,13 +58,7 @@ abstract class RouteDB : RoomDatabase() {
                             "5215 44 Ave NE"
                         )
                             .forEachIndexed { index, address ->
-
-                                database.routeInfoDao().create(
-                                    RouteInfo(0L,
-                                        address,
-                                        if (address == "My Location") 0L else index.toLong(),
-                                        groupId)
-                                )
+                                database.routeInfoDao().create(groupId, address)
                             }
                     }
                 }

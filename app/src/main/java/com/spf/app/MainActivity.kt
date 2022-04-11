@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity(), RouteGroupAdapter.IRouteListener,
     private lateinit var binding: ActivityMainBinding
     private lateinit var py: Python
     private lateinit var wazeRouteCalculator: PyObject
+    private lateinit var adapter: RouteGroupAdapter
     private val viewModel: RouteVM by viewModels {
         RouteVMFactory((application as RouteApplication).repository)
     }
@@ -47,10 +48,13 @@ class MainActivity : AppCompatActivity(), RouteGroupAdapter.IRouteListener,
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val adapter = RouteGroupAdapter(this)
+        adapter = RouteGroupAdapter(this)
         binding.groupsRecycler.adapter = adapter
         binding.groupsRecycler.layoutManager = LinearLayoutManager(this)
-        viewModel.allGroups.observe(this) { groups -> adapter.submitList(groups) }
+        viewModel.allGroups.observe(this) { groups ->
+            Log.d(TAG, "Groups changed, sending new data")
+            adapter.submitList(groups)
+        }
 
         binding.fabAddRoute.setOnClickListener {
 //            val intent = Intent(this, AddRoutesActivity::class.java)
