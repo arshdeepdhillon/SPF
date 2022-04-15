@@ -3,13 +3,10 @@ package com.spf.app.util
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.view.View
-import android.widget.EditText
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.spf.app.R
-import com.spf.app.data.RouteGroup
 
 class RouteGroupDialog : DialogFragment() {
 
@@ -21,7 +18,7 @@ class RouteGroupDialog : DialogFragment() {
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     interface RGDialogListener {
-        fun onSave(data: RouteGroup)
+        fun onSave(groupTitle: String)
     }
 
     // Override the Fragment.onAttach() method to instantiate the NoticeDialogListener
@@ -46,12 +43,12 @@ class RouteGroupDialog : DialogFragment() {
 //            .setTitle(resources.getString())
             .setNeutralButton("Cancel") { dialog, _ -> dialog.dismiss() }
             .setPositiveButton("Continue") { dialog, _ ->
-                val txt = groupTitle.editText?.text.toString()
-                listener.onSave(RouteGroup(0L, txt))
+                val title = groupTitle.editText?.text.toString()
+                listener.onSave(title)
                 dialog.dismiss()
             }.setNegativeButton("Skip") { dialog, _ ->
-                val txt = groupTitle.editText?.text.toString()
-                listener.onSave(RouteGroup(0L, txt))
+                val title = groupTitle.editText?.text.toString()
+                listener.onSave(title)
                 dialog.dismiss()
             }.create()
 

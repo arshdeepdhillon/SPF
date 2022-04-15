@@ -4,11 +4,12 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import com.spf.app.dao.RouteGroupDao
 import com.spf.app.dao.RouteInfoDao
+import com.spf.app.data.DataState
 import com.spf.app.data.RouteGroup
 import com.spf.app.data.RouteInfo
 
 class Repository(private val group: RouteGroupDao, private val route: RouteInfoDao) {
-    val allGroups: LiveData<List<RouteGroup>> = group.getAll()
+    val allGroups: LiveData<List<RouteGroup>> = group.getAllByState()
     fun allRoutesInGroup(id: Long): LiveData<List<RouteInfo>> = route.allRoutesInGroup(id)
 
     // Group related
@@ -17,10 +18,16 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
     suspend fun createGroup(data: RouteGroup) = group.create(data)
 
     @WorkerThread
+    suspend fun createGroup(title: String) = group.create(title)
+
+    @WorkerThread
     suspend fun deleteGroup(id: Long) = group.delete(id)
 
     @WorkerThread
     suspend fun updateGroup(data: RouteGroup) = group.update(data)
+
+    @WorkerThread
+    suspend fun updateGroupState(groupId: Long, state: DataState) = group.updateState(groupId, state)
 
     @WorkerThread
     suspend fun getGroup(id: Long): RouteGroup? = group.get(id)

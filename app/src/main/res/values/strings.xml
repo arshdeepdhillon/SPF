@@ -6,4 +6,5 @@
     <string name="enter_group_title">Title Of Route</string>
     <string name="address">Address</string>
     <string name="navigate">Navigate</string>
+    <string name="snackbar_delete_group">Delete Group</string>
 </resources>

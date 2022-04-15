@@ -25,7 +25,7 @@ import com.google.android.gms.vision.text.TextBlock
 import com.google.android.gms.vision.text.TextRecognizer
 import com.spf.app.MainActivity.Companion.GROUP_ID
 import com.spf.app.RouteApplication
-import com.spf.app.adapter.RouteInfoAdapter
+import com.spf.app.adapter.routeInfo.RouteInfoAdapter
 import com.spf.app.databinding.ActivityShowRoutesBinding
 import com.spf.app.util.LK
 import com.spf.app.viewModel.RouteVM
@@ -41,7 +41,7 @@ import androidx.recyclerview.widget.ItemTouchHelper.UP
 import androidx.recyclerview.widget.ItemTouchHelper.DOWN
 
 import androidx.recyclerview.widget.RecyclerView
-import com.spf.app.adapter.IRouteListener
+import com.spf.app.adapter.routeInfo.IRouteListener
 import java.util.BitSet
 
 class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
@@ -136,7 +136,7 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
         binding.routesRecycler.adapter = adapter
         binding.routesRecycler.layoutManager = LinearLayoutManager(this)
         itemTouchCallBack.attachToRecyclerView(binding.routesRecycler)
-        viewModel.setRouteGroupId(groupId)
+        viewModel.setGroupIdOfCurrRoute(groupId)
         showNavButton()
         // TODO On configuration, get data from RouteVM.cache instead of DB
 //        viewModel.viewModelScope.launch { viewModel.triggerInitRoutesInGroupEvent() }
@@ -259,17 +259,17 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
         }
     }
 
-    /** @see com.spf.app.adapter.IRouteListener.addressChanged */
+    /** @see com.spf.app.adapter.routeInfo.IRouteListener.addressChanged */
     override fun addressChanged(addressId: Long, changedAddress: String) {
         viewModel.updateRouteAddress(addressId, changedAddress)
     }
 
-    /** @see com.spf.app.adapter.IRouteListener.deleteAddress */
+    /** @see com.spf.app.adapter.routeInfo.IRouteListener.deleteAddress */
     override fun deleteAddress(id: Long) {
         viewModel.deleteRoute(id)
     }
 
-    /** @see com.spf.app.adapter.IRouteListener.handleTouch */
+    /** @see com.spf.app.adapter.routeInfo.IRouteListener.handleTouch */
     override fun handleTouch(event: BitSet, routeViewHolder: RouteInfoAdapter.RouteViewHolder?) {
         when (event) {
             START_ANIM -> {

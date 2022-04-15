@@ -1,4 +1,4 @@
-package com.spf.app.adapter
+package com.spf.app.adapter.routeInfo
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -14,7 +14,6 @@ import com.spf.app.databinding.RouteInfoItemBinding
 import com.spf.app.ui.ShowRoutesActivity.Companion.DRAG_STATE_CHANGED
 import com.spf.app.ui.ShowRoutesActivity.Companion.START_ANIM
 import com.spf.app.ui.ShowRoutesActivity.Companion.STOP_ANIM
-import com.spf.app.util.DiffCallBackRouteInfo
 import java.util.BitSet
 import kotlin.collections.ArrayList
 
@@ -124,7 +123,7 @@ class RouteInfoAdapter(
     }
 
     fun submitList(newtList: List<RouteInfo>) {
-        val diffUtil = DiffCallBackRouteInfo(currentList, newtList)
+        val diffUtil = RIDiffCallBack(currentList, newtList)
         val diffResult = DiffUtil.calculateDiff(diffUtil)
         currentList = newtList as ArrayList<RouteInfo>
         diffResult.dispatchUpdatesTo(this)

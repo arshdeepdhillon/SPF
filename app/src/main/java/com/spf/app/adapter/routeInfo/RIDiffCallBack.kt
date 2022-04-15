@@ -1,4 +1,4 @@
-package com.spf.app.util
+package com.spf.app.adapter.routeInfo
 
 import android.os.Bundle
 import android.util.Log
@@ -6,10 +6,15 @@ import androidx.recyclerview.widget.DiffUtil
 import com.spf.app.data.RouteInfo
 import com.spf.app.ui.ShowRoutesActivity.Companion.DRAG_STATE_CHANGED
 
-class DiffCallBackRouteInfo(
+/**
+ * RouteInfo DiffCallBack
+ */
+class RIDiffCallBack(
     private val oldList: List<RouteInfo>,
     private val newList: List<RouteInfo>,
 ) : DiffUtil.Callback() {
+    private val TAG = "RIDiffCallBack"
+
     override fun getOldListSize(): Int = oldList.size
 
     override fun getNewListSize(): Int = newList.size
@@ -33,9 +38,8 @@ class DiffCallBackRouteInfo(
         diffBundle.apply {
             if (oldItem.dragState != newItem.dragState)
                 putBoolean(DRAG_STATE_CHANGED, newItem.dragState)
-
         }
-        Log.d("DIFF_CALLBACK_ROUTE_INFO", "getChangePayload: $diffBundle")
+        Log.d(TAG, "getChangePayload: $diffBundle")
         return diffBundle
     }
 }

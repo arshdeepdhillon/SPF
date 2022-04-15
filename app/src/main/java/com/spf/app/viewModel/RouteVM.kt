@@ -8,6 +8,7 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.ViewModelProvider
+import com.spf.app.data.DataState
 import com.spf.app.data.RouteGroup
 import com.spf.app.data.RouteInfo
 import com.spf.app.repository.Repository
@@ -39,7 +40,7 @@ class RouteVM(
 
     //val addressUiState: StateFlow<UiState.AddressDragUiState> = _addressUiState
     val vmEventFlow = vmEventChannel.receiveAsFlow()
-    fun setRouteGroupId(id: Long) {
+    fun setGroupIdOfCurrRoute(id: Long) {
         routeGroupIdLiveData.value = id
     }
 
@@ -56,6 +57,7 @@ class RouteVM(
     suspend fun updateAddressUiState(groupId: Long) = repo.updateAddressUiState(groupId)
 
     suspend fun createGroup(data: RouteGroup) = repo.createGroup(data)
+    suspend fun createGroup(title: String) = repo.createGroup(title)
 
     suspend fun getGroup(id: Long) = repo.getGroup(id)
 
@@ -63,12 +65,18 @@ class RouteVM(
         repo.updateGroup(data)
     }
 
-    //TODO create transaction to delete routes and group
+    fun updateGroupState(groupId: Long, state: DataState) = viewModelScope.launch(dispatcher) {
+        if (state == DataState.DELETE)
+            repo.deleteGroup(groupId)
+        else
+            repo.updateGroupState(groupId, state)
+    }
+
     fun deleteGroup(groupId: Long) = viewModelScope.launch(dispatcher) {
         repo.deleteGroup(groupId)
     }
 
-//    fun createRoute(data: RouteInfo) = viewModelScope.launch(dispatcher) {
+    //    fun createRoute(data: RouteInfo) = viewModelScope.launch(dispatcher) {
 //        repo.createRoute(data)
 //    }
     fun createRoute(groupId: Long, address: String) = viewModelScope.launch(dispatcher) {

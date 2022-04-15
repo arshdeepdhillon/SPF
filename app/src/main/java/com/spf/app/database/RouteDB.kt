@@ -40,9 +40,7 @@ abstract class RouteDB : RoomDatabase() {
                     database.routeGroupDao().deleteAll()
                     database.routeInfoDao().deleteAll()
                     (1 until 21).forEach { index ->
-                        val groupId: Long = database.routeGroupDao().create(
-                            RouteGroup(0, "Route Group #$index")
-                        )
+                        val groupId: Long = database.routeGroupDao().create("Route Group #$index")
 //                        arrayOf("My Location",
 //                            "5877 Grousewoods Dr, North Vancouver, BC",
 //                            "83 Broadway St W, Nakusp, BC",
@@ -56,10 +54,9 @@ abstract class RouteDB : RoomDatabase() {
                             "113 Tarington Park NE",
                             "19 Savanna St NE",
                             "5215 44 Ave NE"
-                        )
-                            .forEachIndexed { index, address ->
-                                database.routeInfoDao().create(groupId, address)
-                            }
+                        ).forEachIndexed { index, address ->
+                            database.routeInfoDao().create(groupId, address)
+                        }
                     }
                 }
             }

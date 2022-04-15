@@ -18,3 +18,15 @@ data class RouteInfo(
     @ColumnInfo(name = "dragState", defaultValue = "false")
     val dragState: Boolean,
 )
+
+/** To manage the state of RouteInfo item on swipe */
+enum class DataState {
+    /** Item can be shown in UI */
+    SHOW,
+
+    /** Item has been removed/swiped from UI by user so hide it until user's final action */
+    HIDE,
+
+    /** Ready to be delete */
+    DELETE
+}

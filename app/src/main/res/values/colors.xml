@@ -6,4 +6,7 @@
     <color name="dark">#475267</color>
     <color name="txt_dark">#FF000000</color>
     <color name="txt_light">#E6E6E6</color>
+    <color name="swipe_delete_color">#FF6464</color>
+    <color name="swipe_navigation_color">@color/teal</color>
+
 </resources>

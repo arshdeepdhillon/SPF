@@ -11,7 +11,8 @@ data class RouteGroup(
     val groupId: Long,
     @ColumnInfo(name = "title")
     val title: String,
-
+    @ColumnInfo(name = "state")
+    val state: DataState,
 //    @ColumnInfo(name = "num_of_waypoints")
 //    val numOfWayPoints: Int,
 //    @ColumnInfo(name = "last_modified")

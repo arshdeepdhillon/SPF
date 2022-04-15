@@ -10,16 +10,16 @@ import com.spf.app.data.RouteInfo
 @Dao
 interface RouteInfoDao {
 
-    @Query("SELECT r.routeId, r.address, r.groupId, r.optimalIndex, r.dragState FROM routeInfo as r, routeGroup as g where r.address != 'My Location' and  g.groupId = :groupId and r.groupId = :groupId")
+    @Query("SELECT r.routeId, r.address, r.groupId, r.optimalIndex, r.dragState FROM routeInfo AS r, routeGroup AS g WHERE r.address != 'My Location' AND g.groupId = :groupId AND r.groupId = :groupId")
     fun allRoutesInGroup(groupId: Long): LiveData<List<RouteInfo>>
 
-    @Query("SELECT r.routeId, r.address, r.groupId,r.optimalIndex, r.dragState FROM routeInfo as r, routeGroup as g where g.groupId = :groupId and r.groupId = :groupId")
+    @Query("SELECT r.routeId, r.address, r.groupId,r.optimalIndex, r.dragState FROM routeInfo AS r, routeGroup AS g WHERE  g.groupId = :groupId AND r.groupId = :groupId")
     suspend fun routesInGroup(groupId: Long): List<RouteInfo>
 
     @Query("SELECT * FROM routeInfo")
     fun getAllRoutes(): LiveData<List<RouteInfo>>
 
-    @Query("DELETE from routeInfo")
+    @Query("DELETE FROM routeInfo")
     suspend fun deleteAll()
 
     @Query("INSERT INTO routeInfo (groupId, address) VALUES (:groupId, :address)")
@@ -34,7 +34,7 @@ interface RouteInfoDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(info: RouteInfo)
 
-    @Query("DELETE from routeInfo where routeId = :id")
+    @Query("DELETE FROM routeInfo WHERE routeId = :id")
     suspend fun delete(id: Long)
 
     @Query("UPDATE routeInfo SET address = :newAddress WHERE routeId = :routeId")
