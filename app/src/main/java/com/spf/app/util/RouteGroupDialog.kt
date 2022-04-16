@@ -8,29 +8,30 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.spf.app.R
 
+interface RGDialogListener {
+    /**
+     * Broadcast the group title when [MaterialAlertDialogBuilder.setPositiveButton] or
+     * [MaterialAlertDialogBuilder.setNegativeButton] is clicked. */
+    fun onPositiveButton(groupTitle: String)
+}
+
+/**
+ * NOTE: [RGDialogListener] must be implemented to receive event callbacks.
+ */
 class RouteGroupDialog : DialogFragment() {
-
-    private val TAG = "RouteGroupDialog"
     private lateinit var groupTitle: TextInputLayout
-    internal lateinit var listener: RGDialogListener
+    private lateinit var listener: RGDialogListener
 
-    /* The activity that creates an instance of this dialog fragment must
-     * implement this interface in order to receive event callbacks.
-     * Each method passes the DialogFragment in case the host needs to query it. */
-    interface RGDialogListener {
-        fun onSave(groupTitle: String)
-    }
-
-    // Override the Fragment.onAttach() method to instantiate the NoticeDialogListener
+    // Override the Fragment.onAttach() method to instantiate the RGDialogListener
     override fun onAttach(context: Context) {
         super.onAttach(context)
         // Verify that the host activity implements the callback interface
         try {
-            // Instantiate the NoticeDialogListener so we can send events to the host
+            // Instantiate the RGDialogListener so we can send events to the host
             listener = context as RGDialogListener
         } catch (e: ClassCastException) {
-            // The activity doesn't implement the interface, throw exception
-            throw ClassCastException(("${context.toString()} must implement RGDialogListener"))
+            // If the activity doesn't implement the interface, throw exception
+            throw ClassCastException(("$context must implement RGDialogListener"))
         }
     }
 
@@ -41,16 +42,15 @@ class RouteGroupDialog : DialogFragment() {
         groupTitle = view.findViewById(R.id.group_title)
         return dialogBuilder.setView(view)
 //            .setTitle(resources.getString())
-            .setNeutralButton("Cancel") { dialog, _ -> dialog.dismiss() }
-            .setPositiveButton("Continue") { dialog, _ ->
+            .setNeutralButton(getString(R.string.dialog_route_group_cancel)) { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton(getString(R.string.dialog_route_group_continue)) { dialog, _ ->
                 val title = groupTitle.editText?.text.toString()
-                listener.onSave(title)
+                listener.onPositiveButton(title)
                 dialog.dismiss()
-            }.setNegativeButton("Skip") { dialog, _ ->
+            }.setNegativeButton(getString(R.string.dialog_route_group_skip)) { dialog, _ ->
                 val title = groupTitle.editText?.text.toString()
-                listener.onSave(title)
+                listener.onPositiveButton(title)
                 dialog.dismiss()
             }.create()
-
     }
 }

@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SPF">
         <activity
-            android:name="com.spf.app.ui.ShowRoutesActivity"
+            android:name="com.spf.app.ui.RoutesActivity"
             android:exported="false" /> <!-- TODO Either add chaquo here or onCreate(). Not sure yet. Test the difference! -->
         <!-- android:name="com.chaquo.python.android.PyApplication" -->
         <activity

@@ -7,4 +7,8 @@
     <string name="address">Address</string>
     <string name="navigate">Navigate</string>
     <string name="snackbar_delete_group">Delete Group</string>
+    <string name="snackbar_action_undo">UNDO</string>
+    <string name="dialog_route_group_cancel">Cancel</string>
+    <string name="dialog_route_group_continue">Continue</string>
+    <string name="dialog_route_group_skip">Skip</string>
 </resources>

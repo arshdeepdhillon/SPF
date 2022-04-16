@@ -44,9 +44,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.spf.app.adapter.routeInfo.IRouteListener
 import java.util.BitSet
 
-class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
+/**
+ * A multipurpose activity used for adding and showing addresses.
+ */
+class RoutesActivity : AppCompatActivity(), IRouteListener {
     private val TAG = "AddRoutesActivity"
-    private val camReqCode: Int = 100
+    private val cameraReqCode: Int = 100
     private lateinit var wazeRouteCalculator: PyObject
     private lateinit var py: Python
     private lateinit var binding: ActivityShowRoutesBinding
@@ -60,11 +63,7 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
     /** Allows us to drag items in RecyclerView */
     private val itemTouchCallBack: ItemTouchHelper by lazy {
         val simpleItemTouchHelper = object : ItemTouchHelper.SimpleCallback(UP or DOWN, 0) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder,
-            ): Boolean {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
                 val fromPos = viewHolder.bindingAdapterPosition
                 val toPos = target.bindingAdapterPosition
                 // Move item in `fromPos` to `toPos` in adapter.
@@ -83,14 +82,9 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
 
             // Not implementing, so do not allow left and right swipes
-            override fun getSwipeDirs(
-                recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
-            ) = 0
+            override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) = 0
 
-            override fun clearView(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-            ) {
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 Log.d(TAG, "clearView: ")
                 adapter.onDrop()
                 super.clearView(recyclerView, viewHolder)
@@ -123,12 +117,8 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
         py = Python.getInstance()
         wazeRouteCalculator = py.getModule("WazeRouteCalculator")
 
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this,
-                arrayOf(android.Manifest.permission.CAMERA),
-                camReqCode)
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.CAMERA), cameraReqCode)
         }
 
         if (intent.hasExtra(GROUP_ID)) groupId = intent.getLongExtra(GROUP_ID, invalidId)
@@ -160,9 +150,7 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
 //            }
 //        }
 
-        binding.fabTakeImage.setOnClickListener {
-            CropImage.activity().setGuidelines(CropImageView.Guidelines.ON).start(this)
-        }
+        binding.fabTakeImage.setOnClickListener { CropImage.activity().setGuidelines(CropImageView.Guidelines.ON).start(this) }
         binding.fabNavigate.setOnClickListener {
             viewModel.viewModelScope.launch(Dispatchers.Default) {
                 // Get all addresses from db
@@ -192,13 +180,11 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
                 val mapUrlStr = buildGoogleMapUrl(addresses)
                 launchMap(mapUrlStr)
             }
-
         }
         binding.routeGroupTitleEditText.setOnFocusChangeListener { v, hasFocus ->
             // On focus lost, save changes
             if (!hasFocus) {
-                viewModel.updateGroupTitle(groupId,
-                    binding.routeGroupTitleEditText.text.toString())
+                viewModel.updateGroupTitle(groupId, binding.routeGroupTitleEditText.text.toString())
             }
         }
 //        lifecycleScope.launch {
@@ -231,9 +217,7 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
             else -> {
                 if (groupId == invalidId) {
                     Log.e(TAG, "Invalid Route Group ID passed: $groupId")
-                    Toast.makeText(applicationContext,
-                        "Unable to open this route group",
-                        Toast.LENGTH_LONG).show()
+                    Toast.makeText(applicationContext, "Unable to open this route group", Toast.LENGTH_LONG).show()
                     finish()
                 }
             }
@@ -345,9 +329,9 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
     }
 
     /** Inserts address retrieved from captured image */
-    private fun insertAddresses(addrs: List<String>) {
-        if (!addrs.isNullOrEmpty()) {
-            addrs.forEach { viewModel.createRoute(groupId, it) }
+    private fun insertAddresses(addresses: List<String>) {
+        if (!addresses.isNullOrEmpty()) {
+            addresses.forEach { viewModel.createRoute(groupId, it) }
             showNavButton()
         }
     }
@@ -398,12 +382,9 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
             .appendQueryParameter("f", "d")
             .appendQueryParameter("saddr", "My Location")
             // When adding waypoints (ie: '+to:'), 'daddr' acts as second waypoint instead of last waypoint.
-            .appendQueryParameter(
-                "daddr",
-                firstAddrs + "+to:" + addresses.joinToString(separator = "+to:") { it })
+            .appendQueryParameter("daddr", firstAddrs + "+to:" + addresses.joinToString(separator = "+to:") { it })
 
-        val encodedUrl =
-            builder.build().toString().replace("%2Bto%3A", "+to:").replace("%20", "+")
+        val encodedUrl = builder.build().toString().replace("%2Bto%3A", "+to:").replace("%20", "+")
         Log.d(TAG, "Encoded and formatted url: $encodedUrl")
         return encodedUrl
     }
@@ -419,11 +400,7 @@ class ShowRoutesActivity : AppCompatActivity(), IRouteListener {
         var result: Pair<Double, Double>? = null
         val region = "NA"
         try {
-            val res =
-                wazeRouteCalculator.callAttr("WazeRouteCalculator",
-                    startAddr,
-                    destAddr,
-                    region)
+            val res = wazeRouteCalculator.callAttr("WazeRouteCalculator", startAddr, destAddr, region)
             //Log.d(TAG, "res: ${res}")
             val dis = res.callAttr("calc_route_info")
             //Log.d(TAG, "dis: ${dis}")

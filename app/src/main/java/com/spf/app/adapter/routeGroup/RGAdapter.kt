@@ -15,17 +15,14 @@ interface IRouteGroupListener {
     /** Broadcasts the group id that was clicked */
     fun groupClicked(groupId: Long)
 
-    fun removeGroup(groupId: Long)
-    fun addGroup(removedItem: RouteGroup)
-
-    fun showSBOnDelete(bindingPost: Int, groupId: Long)
+    /** Broadcasts the group id that was swiped for deletion */
+    fun swipedForDeletion(groupId: Long)
 }
 
 class RouteGroupAdapter(private val listener: IRouteGroupListener) :
     RecyclerView.Adapter<RouteGroupAdapter.RouteViewHolder>() {
     private val TAG = "RouteGroupAdapter"
     private var currentList: ArrayList<RouteGroup> = arrayListOf()
-    private var removedItem: HashMap<Int, RouteGroup> = hashMapOf()
 
     inner class RouteViewHolder(val binding: RouteGroupItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -98,29 +95,12 @@ class RouteGroupAdapter(private val listener: IRouteGroupListener) :
         return currentList.size
     }
 
-    /**TODO fix when user clicks on undo. We don't have a way to restore Routes */
-    fun deleteSwipedItem(vh: RecyclerView.ViewHolder) {
-
-        removedItem.clear()
-        removedItem[vh.bindingAdapterPosition] = currentList[vh.absoluteAdapterPosition]
+    /**
+     * When item has been swiped for deletion, hide it in UI.
+     */
+    fun swipedForDeletion(vh: RecyclerView.ViewHolder) {
+        listener.swipedForDeletion(currentList[vh.bindingAdapterPosition].groupId)
         currentList.removeAt(vh.absoluteAdapterPosition)
-        listener.removeGroup(removedItem[vh.bindingAdapterPosition]!!.groupId)
         notifyItemRemoved(vh.bindingAdapterPosition)
-        listener.showSBOnDelete(removedItem.keys.first(), removedItem.values.first().groupId)
-//
-//        val behavior = BaseTransientBottomBar.Behavior().apply {
-//            setSwipeDirection(SwipeDismissBehavior.SWIPE_DIRECTION_ANY)
-//        }
-//        Snackbar.make(vh.itemView, "Group deleted", Snackbar.LENGTH_LONG)
-//            .setAction("UNDO") { listener.addGroup(removedItem.values.first()) }
-//            .setBehavior(behavior)
-//            .addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
-//                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-//                    super.onDismissed(transientBottomBar, event)
-//                    Log.d(TAG,
-//                        "onDismissed: ${event} => ${event == Snackbar.Callback.DISMISS_EVENT_ACTION}")
-//                }
-//            })
-//            .show()
     }
 }

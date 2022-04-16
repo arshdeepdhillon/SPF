@@ -18,19 +18,19 @@ import com.google.android.material.snackbar.Snackbar
 import com.spf.app.adapter.routeGroup.IRouteGroupListener
 import com.spf.app.adapter.routeGroup.RouteGroupAdapter
 import com.spf.app.data.DataState
-import com.spf.app.data.RouteGroup
 import com.spf.app.databinding.ActivityMainBinding
-import com.spf.app.ui.ShowRoutesActivity
+import com.spf.app.ui.RoutesActivity
 import com.spf.app.util.RouteGroupDialog
 import com.spf.app.viewModel.RouteVM
 import com.spf.app.viewModel.RouteVMFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.core.content.ContextCompat
+import com.spf.app.util.RGDialogListener
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 
 class MainActivity : AppCompatActivity(), IRouteGroupListener,
-    RouteGroupDialog.RGDialogListener {
+    RGDialogListener {
     private val TAG = "MainActivity"
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: RouteGroupAdapter
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity(), IRouteGroupListener,
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     when (direction) {
                         ItemTouchHelper.RIGHT -> {
-                            adapter.deleteSwipedItem(viewHolder)
+                            adapter.swipedForDeletion(viewHolder)
                         }
                         ItemTouchHelper.LEFT -> {
                             //TODO launch navigation
@@ -101,51 +101,55 @@ class MainActivity : AppCompatActivity(), IRouteGroupListener,
         }
     }
 
-    override fun onSave(groupTitle: String) {
+    override fun onPositiveButton(groupTitle: String) {
         viewModel.viewModelScope.launch(Dispatchers.IO) {
             val id = viewModel.createGroup(groupTitle)
-            launchAddRoutesActivity(id)
+            launchRoutesActivity(id)
         }
     }
 
-    /** @see com.spf.app.adapter.routeGroup.IRouteGroupListener.groupClicked */
     override fun groupClicked(groupId: Long) {
-        launchAddRoutesActivity(groupId)
+        launchRoutesActivity(groupId)
     }
 
-    private fun launchAddRoutesActivity(groupId: Long) {
-        Intent(applicationContext, ShowRoutesActivity::class.java).also {
-            it.putExtra(GROUP_ID, groupId)
+    /**
+     * Hide the swiped group and allow user an opportunity to undo their action.
+     */
+    override fun swipedForDeletion(groupId: Long) {
+        viewModel.updateGroupState(groupId, DataState.HIDE)
+
+        // On each item removed, create a new Snackbar.
+        getSB(getString(R.string.snackbar_delete_group))
+            .setAction(getString(R.string.snackbar_action_undo)) { viewModel.updateGroupState(groupId, DataState.SHOW) }
+            .addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    super.onDismissed(transientBottomBar, event)
+                    // Snackbar action wasn't clicked, so delete the item
+                    if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) viewModel.updateGroupState(groupId, DataState.DELETE)
+                }
+            })
+            .show()
+    }
+
+    /**
+     * Display addresses of given group [id] in [RoutesActivity].
+     * @param id The group ID
+     */
+    private fun launchRoutesActivity(id: Long) {
+        Intent(applicationContext, RoutesActivity::class.java).also {
+            it.putExtra(GROUP_ID, id)
             resultLauncher.launch(it)
         }
     }
 
-    override fun removeGroup(groupId: Long) {
-        viewModel.updateGroupState(groupId, DataState.HIDE)
-    }
-
-    override fun addGroup(removedItem: RouteGroup) {
-        viewModel.viewModelScope.launch(Dispatchers.IO) {
-            viewModel.createGroup(removedItem)
-        }
-    }
-
-    //TODO refactor this so we can handle delete or other swipe action.
-    override fun showSBOnDelete(bindingPost: Int, groupId: Long) {
-        // On each item removed, create a new Snackbar.
-        Snackbar.make(binding.mainActivityLayout, getString(R.string.snackbar_delete_group), Snackbar.LENGTH_LONG)
-            .setAction("UNDO") { viewModel.updateGroupState(groupId, DataState.SHOW) }
+    /**
+     * Creates a consistent [Snackbar].
+     * @param text The text to show
+     * @return [Snackbar]
+     */
+    private fun getSB(text: String): Snackbar {
+        return Snackbar.make(binding.mainActivityLayout, text, Snackbar.LENGTH_LONG)
             .setBehavior(BaseTransientBottomBar.Behavior().apply { setSwipeDirection(SwipeDismissBehavior.SWIPE_DIRECTION_ANY) })
             .setAnchorView(binding.fabAddRoute)
-            .addCallback(
-                object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                        super.onDismissed(transientBottomBar, event)
-                        // Snackbar action wasn't clicked, so delete the item
-                        if (event != Snackbar.Callback.DISMISS_EVENT_ACTION)
-                            viewModel.updateGroupState(groupId, DataState.DELETE)
-                    }
-                })
-            .show()
     }
 }

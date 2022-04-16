@@ -64,9 +64,7 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
     suspend fun getRoutesInGroupByOpt(groupId: Long) = route.getRoutesInGroupByOpt(groupId)
 
     @WorkerThread
-    suspend fun getRoutesInGroupByOptWithoutCurrLocation(groupId: Long) =
-        route.getRoutesInGroupByOptWithoutCurrLocation(groupId)
-
+    suspend fun getRoutesInGroupByOptWithoutCurrLocation(groupId: Long) = route.getRoutesInGroupByOptWithoutCurrLocation(groupId)
 
     @WorkerThread
     suspend fun updateRouteOptIndex(routeId: Long, newOptimalIndex: Long) {

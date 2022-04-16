@@ -11,9 +11,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.spf.app.data.RouteInfo
 import com.spf.app.databinding.RouteInfoItemBinding
-import com.spf.app.ui.ShowRoutesActivity.Companion.DRAG_STATE_CHANGED
-import com.spf.app.ui.ShowRoutesActivity.Companion.START_ANIM
-import com.spf.app.ui.ShowRoutesActivity.Companion.STOP_ANIM
+import com.spf.app.ui.RoutesActivity.Companion.DRAG_STATE_CHANGED
+import com.spf.app.ui.RoutesActivity.Companion.START_ANIM
+import com.spf.app.ui.RoutesActivity.Companion.STOP_ANIM
 import java.util.BitSet
 import kotlin.collections.ArrayList
 

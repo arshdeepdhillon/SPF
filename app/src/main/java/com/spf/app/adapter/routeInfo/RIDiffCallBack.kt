@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.recyclerview.widget.DiffUtil
 import com.spf.app.data.RouteInfo
-import com.spf.app.ui.ShowRoutesActivity.Companion.DRAG_STATE_CHANGED
+import com.spf.app.ui.RoutesActivity.Companion.DRAG_STATE_CHANGED
 
 /**
  * RouteInfo DiffCallBack
