@@ -12,31 +12,35 @@ import androidx.recyclerview.widget.RecyclerView
 import com.spf.app.data.RouteInfo
 import com.spf.app.databinding.RouteInfoItemBinding
 import com.spf.app.ui.RoutesActivity.Companion.DRAG_STATE_CHANGED
+import com.spf.app.ui.RoutesActivity.Companion.OPT_INDEX_CHANGED
 import com.spf.app.ui.RoutesActivity.Companion.START_ANIM
 import com.spf.app.ui.RoutesActivity.Companion.STOP_ANIM
-import java.util.BitSet
+import java.util.*
+
 import kotlin.collections.ArrayList
 
 interface IRouteListener {
     /** Broadcasts that address has changed */
-    fun addressChanged(currAddressId: Long, changedAddress: String)
+    fun addressChanged(addressId: Long, changedAddress: String)
 
     /** Broadcasts the id of address to delete */
     fun deleteAddress(id: Long)
 
     /** Broadcasts an event when an address view is touched */
     // TODO create appropriate event class?
-    fun handleTouch(event: BitSet, routeViewHolder: RouteInfoAdapter.RouteViewHolder? = null)
+    fun handleTouch(event: BitSet, routeViewHolder: RecyclerView.ViewHolder, fromItem: RouteInfo? = null, toItem: RouteInfo? = null)
+
+    /** To update the optimal index when view moves from its old position to the new position */
+    fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long)
 }
 
-class RouteInfoAdapter(
-    private val listener: IRouteListener,
-) : RecyclerView.Adapter<RouteInfoAdapter.RouteViewHolder>() {
+class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adapter<RouteInfoAdapter.RouteViewHolder>() {
     private val TAG = "RouteAdapter"
     private var currentList: ArrayList<RouteInfo> = arrayListOf()
+    private var fromPosItemOptIndex: RouteInfo? = null
+    private var toPosItemOptIndex: RouteInfo? = null
 
-    inner class RouteViewHolder(val binding: RouteInfoItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    inner class RouteViewHolder(val binding: RouteInfoItemBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             setListeners()
         }
@@ -50,8 +54,7 @@ class RouteInfoAdapter(
                 if (!hasFocus) {
                     if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                         val currRouteId = currentList[bindingAdapterPosition].routeId
-                        listener.addressChanged(currRouteId,
-                            binding.routeInfoInputEditText.text.toString())
+                        listener.addressChanged(currRouteId, binding.routeInfoInputEditText.text.toString())
                     }
                 }
             }
@@ -64,6 +67,8 @@ class RouteInfoAdapter(
             binding.dragButton.setOnTouchListener { v, event ->
                 if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                     if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                        fromPosItemOptIndex = currentList[bindingAdapterPosition]
+                        toPosItemOptIndex = null
                         listener.handleTouch(START_ANIM, this)
                     }
                 }
@@ -75,10 +80,8 @@ class RouteInfoAdapter(
          * Binds all items in ViewHolder
          */
         fun bind(routeInfo: RouteInfo) {
-            Log.d(TAG, "bind: ")
             binding.routeInfoInputEditText.setText(routeInfo.address)
-            binding.deleteAddressButton.visibility =
-                if (routeInfo.dragState) View.INVISIBLE else View.VISIBLE
+            binding.deleteAddressButton.visibility = if (routeInfo.dragState) View.INVISIBLE else View.VISIBLE
         }
     }
 
@@ -93,11 +96,7 @@ class RouteInfoAdapter(
         holder.bind(currentList[position])
     }
 
-    override fun onBindViewHolder(
-        holder: RouteViewHolder,
-        position: Int,
-        payloads: MutableList<Any>,
-    ) {
+    override fun onBindViewHolder(holder: RouteViewHolder, position: Int, payloads: MutableList<Any>) {
         // If payload is empty then bind all views otherwise only those whose content changed
         if (payloads.isNotEmpty()) {
             (payloads[0] as Bundle).let { payload ->
@@ -109,6 +108,9 @@ class RouteInfoAdapter(
                                 holder.binding.deleteAddressButton.visibility = View.INVISIBLE
                             else
                                 holder.binding.deleteAddressButton.visibility = View.VISIBLE
+                        }
+                        OPT_INDEX_CHANGED -> {
+                            Log.d(TAG, "onBindViewHolder: OPT_INDEX_CHANGED")
                         }
                     }
                 }
@@ -123,6 +125,7 @@ class RouteInfoAdapter(
     }
 
     fun submitList(newtList: List<RouteInfo>) {
+        Log.d(TAG, "submitList: got new list")
         val diffUtil = RIDiffCallBack(currentList, newtList)
         val diffResult = DiffUtil.calculateDiff(diffUtil)
         currentList = newtList as ArrayList<RouteInfo>
@@ -130,10 +133,23 @@ class RouteInfoAdapter(
     }
 
     /**
-     * Notifies listeners that user has finished dragging the address view.
+     * Notify listeners that user has finished dragging the address view.
+     * NOTE: Do not make these method UI thread intensive.
      */
-    fun onDrop() {
-        listener.handleTouch(STOP_ANIM)
+    fun onDragFinish(viewHolder: RecyclerView.ViewHolder) {
+        if (toPosItemOptIndex != null) {
+            Log.d(TAG, "onDragFinish toPos?: ${viewHolder.bindingAdapterPosition}, addrs: ${fromPosItemOptIndex?.address} ${fromPosItemOptIndex?.optIndex}->${toPosItemOptIndex?.optIndex} ${toPosItemOptIndex?.address}")
+        }
+        listener.handleTouch(STOP_ANIM, viewHolder, fromPosItemOptIndex, toPosItemOptIndex)
+    }
+
+    fun moveItem(fromPos: Int, toPos: Int) {
+        Log.d(TAG, "moveItem: ${fromPos}->${toPos} : ${currentList[fromPos].address} ${currentList[fromPos].optIndex}->${currentList[toPos].optIndex} ${currentList[toPos].address}")
+        toPosItemOptIndex = currentList[toPos]
+
+        // This is madness..:'(
+        // Since diff operator on main thread, if we drag too fast the who list goes out of sync.
+        Collections.swap(currentList, fromPos, toPos)
     }
 
 }

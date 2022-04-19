@@ -14,47 +14,31 @@ import com.spf.app.data.RouteInfo
 import com.spf.app.repository.Repository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-
-
-sealed class VMEvent {
-    data class RouteInfoEvent(val routeInfoList: List<RouteInfo>) : VMEvent()
-    data class RouteGroupEvent(val routeGroup: RouteGroup) : VMEvent()
-}
 
 class RouteVM(
     private val repo: Repository,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val dispatcher: CoroutineDispatcher,
 ) :
     ViewModel() {
 
     private val routeGroupIdLiveData = MutableLiveData<Long>()
-    private val vmEventChannel = Channel<VMEvent>()
 
     val allRoutesInGroup: LiveData<List<RouteInfo>> =
         Transformations.switchMap(routeGroupIdLiveData) { groupId ->
             repo.allRoutesInGroup(groupId)
         }
 
-    //val addressUiState: StateFlow<UiState.AddressDragUiState> = _addressUiState
-    val vmEventFlow = vmEventChannel.receiveAsFlow()
     fun setGroupIdOfCurrRoute(id: Long) {
         routeGroupIdLiveData.value = id
     }
 
     val allGroups: LiveData<List<RouteGroup>> = repo.allGroups.asFlow().asLiveData()
 
-    fun triggerInitRoutesInGroupEvent() = viewModelScope.launch(dispatcher) {
-        val routeInfoData = repo.getRoutesInGroup(routeGroupIdLiveData.value!!)
-//        val routeGroupData = repo.getGroup(routeGroupIdLiveData.value!!)
-//        routeGroupData?.let { vmEventChannel.send(VMEvent.RouteGroupEvent(it)) }
-        vmEventChannel.send(VMEvent.RouteInfoEvent(routeInfoData))
-    }
-
     // TODO improve this logic
-    suspend fun updateAddressUiState(groupId: Long) = repo.updateAddressUiState(groupId)
+    suspend fun updateAddressUiState(groupId: Long) {
+        repo.updateAddressUiState(groupId)
+    }
 
     suspend fun createGroup(data: RouteGroup) = repo.createGroup(data)
     suspend fun createGroup(title: String) = repo.createGroup(title)
@@ -76,11 +60,8 @@ class RouteVM(
         repo.deleteGroup(groupId)
     }
 
-    //    fun createRoute(data: RouteInfo) = viewModelScope.launch(dispatcher) {
-//        repo.createRoute(data)
-//    }
-    fun createRoute(groupId: Long, address: String) = viewModelScope.launch(dispatcher) {
-        repo.createRoute(groupId, address)
+    fun createRoute(groupId: Long, address: String, optIndex: Long = 0L) = viewModelScope.launch(dispatcher) {
+        repo.createRoute(groupId, address, optIndex)
     }
 
     suspend fun getRoutesInGroupByOpt(groupId: Long) = repo.getRoutesInGroupByOpt(groupId)
@@ -95,7 +76,8 @@ class RouteVM(
         repo.updateRoute(data)
     }
 
-    //TODO create transaction to delete routes and group
+    suspend fun getLastOptIndex() = repo.getLastOptIndex()
+
     fun deleteRoute(routeId: Long) = viewModelScope.launch(dispatcher) {
         repo.deleteRoute(routeId)
     }
@@ -108,10 +90,21 @@ class RouteVM(
         repo.updateGroupTitle(groupId, newTitle)
     }
 
-    fun updateOpt(routeId: Long, newOptimalIndex: Long) = viewModelScope.launch(dispatcher) {
-        repo.updateRouteOptIndex(routeId, newOptimalIndex)
+    fun updateOptIndex(routeId: Long, newOptIndex: Long) = viewModelScope.launch(dispatcher) {
+        repo.updateRouteOptIndex(routeId, newOptIndex)
     }
 
+    fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) = viewModelScope.launch(dispatcher) {
+        repo.updateRouteOptIndex(routeIdA, optIndexA, routeIdB, optIndexB)
+    }
+
+    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: RouteInfo) {
+        repo.updateOptOnDragDown(fromItem, toItem)
+    }
+
+    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toItem: RouteInfo) {
+        repo.updateOptOnDragUp(fromItem, toItem)
+    }
 }
 
 class RouteVMFactory(private val repo: Repository) : ViewModelProvider.Factory {
@@ -122,5 +115,4 @@ class RouteVMFactory(private val repo: Repository) : ViewModelProvider.Factory {
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
-
 }

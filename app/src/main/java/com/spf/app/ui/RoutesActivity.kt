@@ -33,16 +33,16 @@ import com.spf.app.viewModel.RouteVMFactory
 import com.theartofdev.edmodo.cropper.CropImage
 import com.theartofdev.edmodo.cropper.CropImageView
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_DRAG
 import androidx.recyclerview.widget.ItemTouchHelper.UP
 import androidx.recyclerview.widget.ItemTouchHelper.DOWN
-
 import androidx.recyclerview.widget.RecyclerView
 import com.spf.app.adapter.routeInfo.IRouteListener
-import java.util.BitSet
+import com.spf.app.data.RouteInfo
+import java.util.*
 
 /**
  * A multipurpose activity used for adding and showing addresses.
@@ -67,15 +67,22 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
                 val fromPos = viewHolder.bindingAdapterPosition
                 val toPos = target.bindingAdapterPosition
                 // Move item in `fromPos` to `toPos` in adapter.
+                adapter.moveItem(fromPos, toPos)
                 adapter.notifyItemMoved(fromPos, toPos)
-
-                Log.d(TAG, "onMove: $fromPos -> $toPos")
                 return true
             }
 
             // Bypass long press so we can immediately execute drag events on touch
             override fun isLongPressDragEnabled(): Boolean {
                 return false
+            }
+
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
+                if (actionState == ACTION_STATE_DRAG) {
+                    viewHolder?.itemView?.scaleX = 1.01f
+                    viewHolder?.itemView?.scaleY = 1.01f
+                }
             }
 
             // Not implementing, ignore it
@@ -85,9 +92,10 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
             override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) = 0
 
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
-                Log.d(TAG, "clearView: ")
-                adapter.onDrop()
+                adapter.onDragFinish(viewHolder)
                 super.clearView(recyclerView, viewHolder)
+                viewHolder.itemView.scaleX = 1.0f
+                viewHolder.itemView.scaleY = 1.0f
             }
         }
         ItemTouchHelper(simpleItemTouchHelper)
@@ -96,6 +104,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     companion object {
         /** IDs of views that changed */
         const val DRAG_STATE_CHANGED = "DRAG_STATE"
+        const val OPT_INDEX_CHANGED = "OPT_INDEX"
 
         /** User interaction with a view has started */
         val START_ANIM: BitSet = BitSet(2) //0x00
@@ -130,9 +139,10 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
         showNavButton()
         // TODO On configuration, get data from RouteVM.cache instead of DB
 //        viewModel.viewModelScope.launch { viewModel.triggerInitRoutesInGroupEvent() }
-        viewModel.allRoutesInGroup.observe(this) { groups ->
+        viewModel.allRoutesInGroup.observe(this) { routes ->
             Log.d(TAG, "Addresses changed, sending new data")
-            adapter.submitList(groups)
+            adapter.submitList(routes)
+            if (routes.isEmpty()) hideNavButton()
         }
 
         // Handle VMEvents triggered by setRouteGroupId()
@@ -172,7 +182,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
                 optRoute.optTour
                     .forEachIndexed { optIndex, addrsIndex ->
                         Log.d(TAG, "onCreate: optIndex, addrsIndex: $optIndex, $addrsIndex")
-                        viewModel.updateOpt(origAddrs[addrsIndex].routeId, optIndex.toLong())
+                        viewModel.updateOptIndex(origAddrs[addrsIndex].routeId, optIndex.toLong())
                     }
 
                 viewModel.getRoutesInGroupByOptWithoutCurrLocation(groupId)
@@ -187,18 +197,6 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
                 viewModel.updateGroupTitle(groupId, binding.routeGroupTitleEditText.text.toString())
             }
         }
-//        lifecycleScope.launch {
-//            repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                viewModel.addressUiState.collect { state ->
-//                    Log.d(TAG, "onCreate: ${state}")
-//                    when (state) {
-//                        is UiState.AddressDragUiState -> {
-//                            adapter.newUiState(state)
-//                        }
-//                    }
-//                }
-//            }
-//        }
 
         when {
             savedInstanceState != null -> {
@@ -217,7 +215,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
             else -> {
                 if (groupId == invalidId) {
                     Log.e(TAG, "Invalid Route Group ID passed: $groupId")
-                    Toast.makeText(applicationContext, "Unable to open this route group", Toast.LENGTH_LONG).show()
+                    Toast.makeText(applicationContext, "Unable to open this group", Toast.LENGTH_LONG).show()
                     finish()
                 }
             }
@@ -237,8 +235,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
                 val unrestrictedIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                 startActivity(unrestrictedIntent)
             } catch (innerEx: ActivityNotFoundException) {
-                Toast.makeText(this, "Please install a maps application", Toast.LENGTH_LONG)
-                    .show()
+                Toast.makeText(this, "Please install a maps application", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -254,24 +251,35 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     }
 
     /** @see com.spf.app.adapter.routeInfo.IRouteListener.handleTouch */
-    override fun handleTouch(event: BitSet, routeViewHolder: RouteInfoAdapter.RouteViewHolder?) {
+    override fun handleTouch(event: BitSet, routeViewHolder: RecyclerView.ViewHolder, fromItem: RouteInfo?, toItem: RouteInfo?) {
         when (event) {
             START_ANIM -> {
                 Log.d(TAG, "handleTouch: START_ANIM")
                 viewModel.viewModelScope.launch(Dispatchers.IO) {
                     viewModel.updateAddressUiState(groupId)
                     withContext(Dispatchers.Main) {
-                        itemTouchCallBack.startDrag(routeViewHolder!!)
+                        itemTouchCallBack.startDrag(routeViewHolder)
                     }
                 }
             }
             STOP_ANIM -> {
                 Log.d(TAG, "handleTouch: STOP_ANIM")
                 viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    if (fromItem != null && toItem != null) {
+                        if (fromItem.optIndex < toItem.optIndex) {
+                            viewModel.updateOptOnDragDown(fromItem, toItem)
+                        } else if (fromItem.optIndex > toItem.optIndex) {
+                            viewModel.updateOptOnDragUp(fromItem, toItem)
+                        }
+                    }
                     viewModel.updateAddressUiState(groupId)
                 }
             }
         }
+    }
+
+    override fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) {
+        viewModel.updateOptIndex(routeIdA, optIndexA, routeIdB, optIndexB)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -291,8 +299,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 CropImage.getActivityResult(data).let {
-                    val bitMap: Bitmap =
-                        MediaStore.Images.Media.getBitmap(contentResolver, it.uri)
+                    val bitMap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, it.uri)
                     //TODO add addresses to db
                     val capturedAddresses = getTextFromBitmap(bitMap)
                     if (capturedAddresses.isEmpty()) {
@@ -308,18 +315,15 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     //TODO shouldn't need this. Utilize livedata
     /** Initializes the views */
     private fun setupViewInit(id: Long) {
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModel.viewModelScope.launch(Dispatchers.IO) {
             val routeGroup = viewModel.getGroup(id)
             withContext(Dispatchers.Main) {
                 if (routeGroup != null) {
                     Log.d(TAG, "setupView: Setup route title")
                     binding.routeGroupTitleEditText.setText(routeGroup.title)
-                    //TODO initialize address
                 } else {
                     Log.e(TAG, "Route Group ID not found in DB: $id")
-                    Toast.makeText(applicationContext,
-                        "Failed to load addresses",
-                        Toast.LENGTH_LONG).show()
+                    Toast.makeText(applicationContext, "Failed to load addresses", Toast.LENGTH_LONG).show()
                     val replyIntent = Intent()
                     setResult(RESULT_CANCELED, replyIntent)
                     finish()
@@ -331,8 +335,17 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     /** Inserts address retrieved from captured image */
     private fun insertAddresses(addresses: List<String>) {
         if (!addresses.isNullOrEmpty()) {
-            addresses.forEach { viewModel.createRoute(groupId, it) }
-            showNavButton()
+            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                var lastOptIndex = viewModel.getLastOptIndex().orElse(0L)
+                if (lastOptIndex != 0L) lastOptIndex++
+                addresses.forEach { addressStr ->
+                    viewModel.createRoute(groupId, addressStr, lastOptIndex)
+                    lastOptIndex++
+                }
+                withContext(Dispatchers.Main) {
+                    showNavButton()
+                }
+            }
         }
     }
 
@@ -434,17 +447,14 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
          */
         for (start in addresses.indices) {
             for (end in start + 1 until matrixSize) {
-                Log.d(
-                    TAG, "Getting distance: (${addresses[start]} -> ${addresses[end]})"
-                )
+                Log.d(TAG, "Getting distance: (${addresses[start]} -> ${addresses[end]})")
                 val route = getDistance(addresses[start], addresses[end])
 
                 if (route == null) {
                     Log.d(TAG, "No distance found: (${addresses[start]} -> ${addresses[end]})")
                 } else {
                     val (time, dist) = route
-                    Log.d(TAG,
-                        "$time mins, $dist km: (${addresses[start]} -> ${addresses[end]})")
+                    Log.d(TAG, "$time mins, $dist km: (${addresses[start]} -> ${addresses[end]})")
                     disMatrix[start][end] = (dist * scaleMatrix).toInt()
                     disMatrix[end][start] = disMatrix[start][end]
                 }

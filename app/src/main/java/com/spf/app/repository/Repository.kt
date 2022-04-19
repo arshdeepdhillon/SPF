@@ -1,6 +1,5 @@
 package com.spf.app.repository
 
-import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import com.spf.app.dao.RouteGroupDao
 import com.spf.app.dao.RouteInfoDao
@@ -14,65 +13,62 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
 
     // Group related
 
-    @WorkerThread
     suspend fun createGroup(data: RouteGroup) = group.create(data)
 
-    @WorkerThread
     suspend fun createGroup(title: String) = group.create(title)
 
-    @WorkerThread
     suspend fun deleteGroup(id: Long) = group.delete(id)
 
-    @WorkerThread
     suspend fun updateGroup(data: RouteGroup) = group.update(data)
 
-    @WorkerThread
     suspend fun updateGroupState(groupId: Long, state: DataState) = group.updateState(groupId, state)
 
-    @WorkerThread
     suspend fun getGroup(id: Long): RouteGroup? = group.get(id)
 
 
     // Route related
 
-    @WorkerThread
     suspend fun getRoutesInGroup(id: Long): List<RouteInfo> = route.routesInGroup(id)
 
-    @WorkerThread
-    suspend fun createRoute(groupId: Long, address: String) = route.create(groupId, address)
+    suspend fun createRoute(groupId: Long, address: String, optIndex: Long) = route.create(groupId, address, optIndex)
 
-    @WorkerThread
     suspend fun deleteRoute(id: Long) = route.delete(id)
 
-    @WorkerThread
     suspend fun updateRoute(data: RouteInfo) = route.update(data)
 
-    @WorkerThread
     suspend fun getRoute(id: Long): RouteInfo? = route.get(id)
 
-    @WorkerThread
     suspend fun updateRouteAddress(routeId: Long, newAddress: String) {
         route.updateAddress(routeId, newAddress)
     }
 
-    @WorkerThread
     suspend fun updateGroupTitle(groupId: Long, newTitle: String) {
         group.updateTitle(groupId, newTitle)
     }
 
-    @WorkerThread
     suspend fun getRoutesInGroupByOpt(groupId: Long) = route.getRoutesInGroupByOpt(groupId)
 
-    @WorkerThread
     suspend fun getRoutesInGroupByOptWithoutCurrLocation(groupId: Long) = route.getRoutesInGroupByOptWithoutCurrLocation(groupId)
 
-    @WorkerThread
-    suspend fun updateRouteOptIndex(routeId: Long, newOptimalIndex: Long) {
-        route.updateOptIndex(routeId, newOptimalIndex)
+    suspend fun updateRouteOptIndex(routeId: Long, newOptIndex: Long) {
+        route.updateOptIndex(routeId, newOptIndex)
     }
 
-    @WorkerThread
+    suspend fun updateRouteOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) {
+        route.updateOptIndex(routeIdA, optIndexA, routeIdB, optIndexB)
+    }
+
     suspend fun updateAddressUiState(groupId: Long) {
         route.updateAddressUiState(groupId)
+    }
+
+    suspend fun getLastOptIndex() = route.lastOptIndex()
+
+    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: RouteInfo) {
+        route.updateOptOnDragDown(fromItem, toItem)
+    }
+
+    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toItem: RouteInfo) {
+        route.updateOptOnDragUp(fromItem, toItem)
     }
 }

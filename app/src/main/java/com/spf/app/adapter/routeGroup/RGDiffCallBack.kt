@@ -25,7 +25,7 @@ class RGDiffCallBack(
 
     override fun areContentsTheSame(oldItemPos: Int, newItemPos: Int): Boolean {
         return oldList[oldItemPos].groupId == newList[newItemPos].groupId
-                && oldList[oldItemPos].title == newList[newItemPos].title
+            && oldList[oldItemPos].title == newList[newItemPos].title
     }
 
     override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
