@@ -148,7 +148,7 @@ class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adap
         toPosItemOptIndex = currentList[toPos]
 
         // This is madness..:'(
-        // Since diff operator on main thread, if we drag too fast the who list goes out of sync.
+        // Since diff operates on main thread, it is possible for currentList and the UI state in database to be out of sync.
         Collections.swap(currentList, fromPos, toPos)
     }
 
