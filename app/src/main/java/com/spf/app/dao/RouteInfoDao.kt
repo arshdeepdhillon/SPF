@@ -54,8 +54,10 @@ interface RouteInfoDao {
 
     @Transaction
     suspend fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) {
+//        Log.d("RouteVM", "updateOptIndex: DAO start")
         updateOptIndex(routeIdA, optIndexA)
         updateOptIndex(routeIdB, optIndexB)
+//        Log.d("RouteVM", "updateOptIndex: DAO done")
     }
 
     @Query("UPDATE routeInfo SET dragState = NOT dragState where groupId = :groupId")
@@ -74,10 +76,10 @@ interface RouteInfoDao {
     suspend fun updateOptOnDragDownHelper(groupId: Long, fromPosOptIndex: Long, toPosOptIndex: Long)
 
     @Transaction
-    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: RouteInfo) {
+    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: Long) {
 //        Log.d("DAO", "updateOptOnDragDown: b toItem.optIndex ${toItem.optIndex}")
-        updateOptOnDragDownHelper(fromItem.groupId, fromItem.optIndex, toItem.optIndex)
-        updateOptIndex(fromItem.routeId, toItem.optIndex)
+        updateOptOnDragDownHelper(fromItem.groupId, fromItem.optIndex, toItem)
+        updateOptIndex(fromItem.routeId, toItem)
 //        Log.d("DAO", "updateOptOnDragDown: a toItem.optIndex ${toItem.optIndex}")
     }
 
@@ -85,8 +87,8 @@ interface RouteInfoDao {
     suspend fun updateOptOnDragUpHelper(groupId: Long, fromPosOptIndex: Long, toPosOptIndex: Long)
 
     @Transaction
-    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toItem: RouteInfo) {
-        updateOptOnDragUpHelper(fromItem.groupId, fromItem.optIndex, toItem.optIndex)
-        updateOptIndex(fromItem.routeId, toItem.optIndex)
+    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toItem: Long) {
+        updateOptOnDragUpHelper(fromItem.groupId, fromItem.optIndex, toItem)
+        updateOptIndex(fromItem.routeId, toItem)
     }
 }

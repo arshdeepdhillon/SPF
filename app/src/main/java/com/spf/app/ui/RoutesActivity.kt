@@ -104,7 +104,6 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     companion object {
         /** IDs of views that changed */
         const val DRAG_STATE_CHANGED = "DRAG_STATE"
-        const val OPT_INDEX_CHANGED = "OPT_INDEX"
 
         /** User interaction with a view has started */
         val START_ANIM: BitSet = BitSet(2) //0x00
@@ -251,7 +250,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     }
 
     /** @see com.spf.app.adapter.routeInfo.IRouteListener.handleTouch */
-    override fun handleTouch(event: BitSet, routeViewHolder: RecyclerView.ViewHolder, fromItem: RouteInfo?, toItem: RouteInfo?) {
+    override fun handleTouch(event: BitSet, routeViewHolder: RecyclerView.ViewHolder, fromItem: RouteInfo?, toPos: Int?) {
         when (event) {
             START_ANIM -> {
                 Log.d(TAG, "handleTouch: START_ANIM")
@@ -264,22 +263,18 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
             }
             STOP_ANIM -> {
                 Log.d(TAG, "handleTouch: STOP_ANIM")
+
+                //Run on same dispatcher
                 viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    if (fromItem != null && toItem != null) {
-                        if (fromItem.optIndex < toItem.optIndex) {
-                            viewModel.updateOptOnDragDown(fromItem, toItem)
-                        } else if (fromItem.optIndex > toItem.optIndex) {
-                            viewModel.updateOptOnDragUp(fromItem, toItem)
-                        }
+                    if (toPos != null && fromItem != null) {
+                        // Update if drop position isn't equal to start-drag position
+                        if (fromItem.optIndex != toPos.toLong())
+                            viewModel.updateOptOnDrag(fromItem, toPos)
                     }
                     viewModel.updateAddressUiState(groupId)
                 }
             }
         }
-    }
-
-    override fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) {
-        viewModel.updateOptIndex(routeIdA, optIndexA, routeIdB, optIndexB)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

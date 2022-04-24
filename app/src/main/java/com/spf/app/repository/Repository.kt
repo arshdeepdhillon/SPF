@@ -64,11 +64,11 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
 
     suspend fun getLastOptIndex() = route.lastOptIndex()
 
-    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: RouteInfo) {
-        route.updateOptOnDragDown(fromItem, toItem)
+    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toPos: Long) {
+        route.updateOptOnDragDown(fromItem, toPos)
     }
 
-    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toItem: RouteInfo) {
-        route.updateOptOnDragUp(fromItem, toItem)
+    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toPos: Long) {
+        route.updateOptOnDragUp(fromItem, toPos)
     }
 }

@@ -21,7 +21,7 @@ class RouteVM(
     private val dispatcher: CoroutineDispatcher,
 ) :
     ViewModel() {
-
+    private val TAG = "RouteVM"
     private val routeGroupIdLiveData = MutableLiveData<Long>()
 
     val allRoutesInGroup: LiveData<List<RouteInfo>> =
@@ -94,16 +94,20 @@ class RouteVM(
         repo.updateRouteOptIndex(routeId, newOptIndex)
     }
 
-    fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) = viewModelScope.launch(dispatcher) {
-        repo.updateRouteOptIndex(routeIdA, optIndexA, routeIdB, optIndexB)
+    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toPos: Long) {
+        repo.updateOptOnDragDown(fromItem, toPos)
     }
 
-    suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: RouteInfo) {
-        repo.updateOptOnDragDown(fromItem, toItem)
+    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toPos: Long) {
+        repo.updateOptOnDragUp(fromItem, toPos)
     }
 
-    suspend fun updateOptOnDragUp(fromItem: RouteInfo, toItem: RouteInfo) {
-        repo.updateOptOnDragUp(fromItem, toItem)
+    suspend fun updateOptOnDrag(fromItem: RouteInfo, toPos: Int) {
+        if (fromItem.optIndex < toPos) {
+            updateOptOnDragDown(fromItem, toPos.toLong())
+        } else if (fromItem.optIndex > toPos) {
+            updateOptOnDragUp(fromItem, toPos.toLong())
+        }
     }
 }
 

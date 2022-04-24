@@ -46,19 +46,22 @@ abstract class RouteDB : RoomDatabase() {
 //                            "83 Broadway St W, Nakusp, BC",
 //                            "2911 Weather Hill, West Kelowna, BC",
 //                            "403 Eveline St, Selkirk, MB")
-                        arrayOf(
-                            "My Location",
-                            "140 Harvest Wood Way NE",
-                            "140 Taralake Terrace NE",
-                            "247 Martinvalley Crescent NE",
-                            "113 Tarington Park NE",
-                            "19 Savanna St NE",
-                            "5215 44 Ave NE"
-                        ).forEachIndexed { optIndex, address ->
-                            database.routeInfoDao().create(groupId, address, optIndex.toLong())
-                        }
-                        (7 until 105).forEach {
-                            database.routeInfoDao().create(groupId, "${it}", it.toLong())
+//                        arrayOf(
+//                            "My Location",
+//                            "140 Harvest Wood Way NE",
+//                            "140 Taralake Terrace NE",
+//                            "247 Martinvalley Crescent NE",
+//                            "113 Tarington Park NE",
+//                            "19 Savanna St NE",
+//                            "5215 44 Ave NE"
+//                        ).forEachIndexed { optIndex, address ->
+//                            database.routeInfoDao().create(groupId, address, optIndex.toLong())
+//                        }
+//                        (7 until 105).forEach {
+//                            database.routeInfoDao().create(groupId, "${it}", it.toLong())
+//                        }
+                        (0 until 101).forEach {
+                            database.routeInfoDao().create(groupId, "Item ${it}", it.toLong())
                         }
                     }
                 }

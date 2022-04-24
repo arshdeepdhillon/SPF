@@ -12,11 +12,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.spf.app.data.RouteInfo
 import com.spf.app.databinding.RouteInfoItemBinding
 import com.spf.app.ui.RoutesActivity.Companion.DRAG_STATE_CHANGED
-import com.spf.app.ui.RoutesActivity.Companion.OPT_INDEX_CHANGED
 import com.spf.app.ui.RoutesActivity.Companion.START_ANIM
 import com.spf.app.ui.RoutesActivity.Companion.STOP_ANIM
-import java.util.*
-
+import java.util.BitSet
+import java.util.Collections
 import kotlin.collections.ArrayList
 
 interface IRouteListener {
@@ -28,17 +27,14 @@ interface IRouteListener {
 
     /** Broadcasts an event when an address view is touched */
     // TODO create appropriate event class?
-    fun handleTouch(event: BitSet, routeViewHolder: RecyclerView.ViewHolder, fromItem: RouteInfo? = null, toItem: RouteInfo? = null)
-
-    /** To update the optimal index when view moves from its old position to the new position */
-    fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long)
+    fun handleTouch(event: BitSet, routeViewHolder: RecyclerView.ViewHolder, fromItem: RouteInfo? = null, toPos: Int? = null)
 }
 
 class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adapter<RouteInfoAdapter.RouteViewHolder>() {
     private val TAG = "RouteAdapter"
-    private var currentList: ArrayList<RouteInfo> = arrayListOf()
-    private var fromPosItemOptIndex: RouteInfo? = null
-    private var toPosItemOptIndex: RouteInfo? = null
+    private var currentList: List<RouteInfo> = mutableListOf()
+    private var fromPosItem: RouteInfo? = null
+    private var toPos: Int? = null
 
     inner class RouteViewHolder(val binding: RouteInfoItemBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
@@ -67,8 +63,8 @@ class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adap
             binding.dragButton.setOnTouchListener { v, event ->
                 if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                     if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                        fromPosItemOptIndex = currentList[bindingAdapterPosition]
-                        toPosItemOptIndex = null
+                        fromPosItem = currentList[bindingAdapterPosition]
+                        toPos = null
                         listener.handleTouch(START_ANIM, this)
                     }
                 }
@@ -109,9 +105,6 @@ class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adap
                             else
                                 holder.binding.deleteAddressButton.visibility = View.VISIBLE
                         }
-                        OPT_INDEX_CHANGED -> {
-                            Log.d(TAG, "onBindViewHolder: OPT_INDEX_CHANGED")
-                        }
                     }
                 }
             }
@@ -137,19 +130,20 @@ class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adap
      * NOTE: Do not make these method UI thread intensive.
      */
     fun onDragFinish(viewHolder: RecyclerView.ViewHolder) {
-        if (toPosItemOptIndex != null) {
-            Log.d(TAG, "onDragFinish toPos?: ${viewHolder.bindingAdapterPosition}, addrs: ${fromPosItemOptIndex?.address} ${fromPosItemOptIndex?.optIndex}->${toPosItemOptIndex?.optIndex} ${toPosItemOptIndex?.address}")
-        }
-        listener.handleTouch(STOP_ANIM, viewHolder, fromPosItemOptIndex, toPosItemOptIndex)
+        listener.handleTouch(STOP_ANIM, viewHolder, fromPosItem, toPos)
     }
 
     fun moveItem(fromPos: Int, toPos: Int) {
         Log.d(TAG, "moveItem: ${fromPos}->${toPos} : ${currentList[fromPos].address} ${currentList[fromPos].optIndex}->${currentList[toPos].optIndex} ${currentList[toPos].address}")
-        toPosItemOptIndex = currentList[toPos]
-
-        // This is madness..:'(
-        // Since diff operates on main thread, it is possible for currentList and the UI state in database to be out of sync.
-        Collections.swap(currentList, fromPos, toPos)
+        this.toPos = toPos
+        if (fromPos < toPos) {
+            for (i in fromPos until toPos) {
+                Collections.swap(currentList, i, i + 1)
+            }
+        } else {
+            for (i in fromPos downTo toPos + 1) {
+                Collections.swap(currentList, i, i - 1)
+            }
+        }
     }
-
 }
