@@ -7,7 +7,7 @@ import androidx.room.ForeignKey.NO_ACTION
 import androidx.room.PrimaryKey
 
 // Not using ForeignKey.CASCADE on child table in case we need to manipulate data on delete (ie: Recycle Bin)
-@Entity(foreignKeys = [ForeignKey(
+@Entity(tableName = "routeInfo", foreignKeys = [ForeignKey(
     entity = RouteGroup::class,
     parentColumns = ["groupId"],
     childColumns = ["groupId"],

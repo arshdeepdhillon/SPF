@@ -245,8 +245,8 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     }
 
     /** @see com.spf.app.adapter.routeInfo.IRouteListener.deleteAddress */
-    override fun deleteAddress(id: Long) {
-        viewModel.deleteRoute(id)
+    override fun deleteAddress(routeId: Long) {
+        viewModel.deleteRoute(routeId)
     }
 
     /** @see com.spf.app.adapter.routeInfo.IRouteListener.handleTouch */
@@ -331,7 +331,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     private fun insertAddresses(addresses: List<String>) {
         if (!addresses.isNullOrEmpty()) {
             viewModel.viewModelScope.launch(Dispatchers.IO) {
-                var lastOptIndex = viewModel.getLastOptIndex().orElse(0L)
+                var lastOptIndex = viewModel.getLastOptIndex(groupId).orElse(0L)
                 if (lastOptIndex != 0L) lastOptIndex++
                 addresses.forEach { addressStr ->
                     viewModel.createRoute(groupId, addressStr, lastOptIndex)

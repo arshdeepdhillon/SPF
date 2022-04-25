@@ -16,14 +16,13 @@ import com.spf.app.ui.RoutesActivity.Companion.START_ANIM
 import com.spf.app.ui.RoutesActivity.Companion.STOP_ANIM
 import java.util.BitSet
 import java.util.Collections
-import kotlin.collections.ArrayList
 
 interface IRouteListener {
     /** Broadcasts that address has changed */
     fun addressChanged(addressId: Long, changedAddress: String)
 
     /** Broadcasts the id of address to delete */
-    fun deleteAddress(id: Long)
+    fun deleteAddress(routeId: Long)
 
     /** Broadcasts an event when an address view is touched */
     // TODO create appropriate event class?
@@ -121,7 +120,7 @@ class RouteInfoAdapter(private val listener: IRouteListener) : RecyclerView.Adap
         Log.d(TAG, "submitList: got new list")
         val diffUtil = RIDiffCallBack(currentList, newtList)
         val diffResult = DiffUtil.calculateDiff(diffUtil)
-        currentList = newtList as ArrayList<RouteInfo>
+        currentList = newtList
         diffResult.dispatchUpdatesTo(this)
     }
 

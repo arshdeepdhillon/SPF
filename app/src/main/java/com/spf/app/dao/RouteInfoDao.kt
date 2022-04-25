@@ -1,6 +1,5 @@
 package com.spf.app.dao
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
@@ -43,8 +42,21 @@ interface RouteInfoDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(info: RouteInfo)
 
-    @Query("DELETE FROM routeInfo WHERE routeId = :id")
-    suspend fun delete(id: Long)
+    @Query("DELETE FROM routeInfo WHERE routeId = :routeId")
+    suspend fun delete(routeId: Long)
+
+    @Query("UPDATE routeInfo SET optimalIndex = optimalIndex - 1 WHERE groupId = :groupId AND optimalIndex > :optIndex ")
+    suspend fun updateOptOnDelete(groupId: Long, optIndex: Long)
+
+    @Transaction
+    suspend fun deleteAndUpdateOpt(routeId: Long) {
+        val route = get(routeId)
+        //Ignore double click. TODO: fix it in View layer?
+        if (route != null) {
+            delete(routeId)
+            updateOptOnDelete(route.groupId, route.optIndex)
+        }
+    }
 
     @Query("UPDATE routeInfo SET address = :newAddress WHERE routeId = :routeId")
     suspend fun updateAddress(routeId: Long, newAddress: String)
@@ -52,19 +64,11 @@ interface RouteInfoDao {
     @Query("UPDATE routeInfo SET optimalIndex = :newOptimalIndex WHERE routeId = :routeId")
     suspend fun updateOptIndex(routeId: Long, newOptimalIndex: Long)
 
-    @Transaction
-    suspend fun updateOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) {
-//        Log.d("RouteVM", "updateOptIndex: DAO start")
-        updateOptIndex(routeIdA, optIndexA)
-        updateOptIndex(routeIdB, optIndexB)
-//        Log.d("RouteVM", "updateOptIndex: DAO done")
-    }
-
     @Query("UPDATE routeInfo SET dragState = NOT dragState where groupId = :groupId")
     suspend fun updateAddressUiState(groupId: Long)
 
-    @Query("SELECT MAX(optimalIndex) FROM routeInfo")
-    suspend fun lastOptIndex(): Optional<Long>
+    @Query("SELECT MAX(optimalIndex) FROM routeInfo WHERE groupId = :groupId")
+    suspend fun lastOptIndex(groupId: Long): Optional<Long>
 
     @Query("UPDATE routeInfo SET optimalIndex = :newOptIndex, dragState = NOT dragState WHERE groupId = :groupId AND routeId = :routeId")
     suspend fun updateOptIndexAndUiState(groupId: Long, routeId: Long, newOptIndex: Long)
@@ -72,15 +76,14 @@ interface RouteInfoDao {
     @Query("SELECT optimalIndex FROM routeInfo where groupId = :groupId AND optimalIndex = :optIndex ")
     suspend fun getOptIndex(groupId: Long, optIndex: Long): Long
 
-    @Query("UPDATE routeInfo set optimalIndex = optimalIndex - 1 WHERE groupId = :groupId AND  optimalIndex > :fromPosOptIndex AND optimalIndex <= :toPosOptIndex")
+    @Query("UPDATE routeInfo set optimalIndex = optimalIndex - 1 WHERE groupId = :groupId AND optimalIndex > :fromPosOptIndex AND optimalIndex <= :toPosOptIndex")
     suspend fun updateOptOnDragDownHelper(groupId: Long, fromPosOptIndex: Long, toPosOptIndex: Long)
 
     @Transaction
     suspend fun updateOptOnDragDown(fromItem: RouteInfo, toItem: Long) {
-//        Log.d("DAO", "updateOptOnDragDown: b toItem.optIndex ${toItem.optIndex}")
+        // Update optimalIndex of all rows between fromItem.optIndex and toItem
         updateOptOnDragDownHelper(fromItem.groupId, fromItem.optIndex, toItem)
         updateOptIndex(fromItem.routeId, toItem)
-//        Log.d("DAO", "updateOptOnDragDown: a toItem.optIndex ${toItem.optIndex}")
     }
 
     @Query("UPDATE routeInfo set optimalIndex = optimalIndex + 1 WHERE groupId = :groupId AND  optimalIndex < :fromPosOptIndex AND optimalIndex >= :toPosOptIndex")

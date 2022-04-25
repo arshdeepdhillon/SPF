@@ -32,7 +32,7 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
 
     suspend fun createRoute(groupId: Long, address: String, optIndex: Long) = route.create(groupId, address, optIndex)
 
-    suspend fun deleteRoute(id: Long) = route.delete(id)
+    suspend fun deleteRoute(routeId: Long) = route.deleteAndUpdateOpt(routeId)
 
     suspend fun updateRoute(data: RouteInfo) = route.update(data)
 
@@ -54,15 +54,11 @@ class Repository(private val group: RouteGroupDao, private val route: RouteInfoD
         route.updateOptIndex(routeId, newOptIndex)
     }
 
-    suspend fun updateRouteOptIndex(routeIdA: Long, optIndexA: Long, routeIdB: Long, optIndexB: Long) {
-        route.updateOptIndex(routeIdA, optIndexA, routeIdB, optIndexB)
-    }
-
     suspend fun updateAddressUiState(groupId: Long) {
         route.updateAddressUiState(groupId)
     }
 
-    suspend fun getLastOptIndex() = route.lastOptIndex()
+    suspend fun getLastOptIndex(groupId: Long) = route.lastOptIndex(groupId)
 
     suspend fun updateOptOnDragDown(fromItem: RouteInfo, toPos: Long) {
         route.updateOptOnDragDown(fromItem, toPos)

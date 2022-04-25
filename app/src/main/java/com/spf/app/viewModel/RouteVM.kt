@@ -60,7 +60,7 @@ class RouteVM(
         repo.deleteGroup(groupId)
     }
 
-    fun createRoute(groupId: Long, address: String, optIndex: Long = 0L) = viewModelScope.launch(dispatcher) {
+    suspend fun createRoute(groupId: Long, address: String, optIndex: Long = 0L) {
         repo.createRoute(groupId, address, optIndex)
     }
 
@@ -76,7 +76,7 @@ class RouteVM(
         repo.updateRoute(data)
     }
 
-    suspend fun getLastOptIndex() = repo.getLastOptIndex()
+    suspend fun getLastOptIndex(groupId: Long) = repo.getLastOptIndex(groupId)
 
     fun deleteRoute(routeId: Long) = viewModelScope.launch(dispatcher) {
         repo.deleteRoute(routeId)
