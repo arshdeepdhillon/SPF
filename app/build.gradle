@@ -5,7 +5,27 @@ plugins {
     id 'kotlin-kapt'
 }
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+
+// Load keystore.properties file into the keystoreProperties object
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+        debugRelease {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
     compileSdk 31
 
     defaultConfig {
@@ -25,9 +45,9 @@ android {
                 install "WazeRouteCalculator==0.15"
             }
             pyc {
-                // TODO set it to true when creating an APK
+                // TODO set it to false when creating an APK
                 // https://chaquo.com/chaquopy/doc/10.0/android.html#data-files
-                src false
+                src true
             }
         }
     }
@@ -36,7 +56,19 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            applicationIdSuffix '.release'
+            signingConfig signingConfigs.release
+        }
+        debugRelease {
+            minifyEnabled true
+            shrinkResources true
+            applicationIdSuffix '.debug'
+            debuggable true
+            signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
