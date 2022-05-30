@@ -26,6 +26,7 @@ import com.spf.app.viewModel.RouteVMFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.spf.app.util.RGDialogListener
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 
@@ -46,7 +47,12 @@ class MainActivity : AppCompatActivity(), IRouteGroupListener,
     private val itemTouchCallBack: ItemTouchHelper by lazy {
         val simpleItemTouchHelper =
             object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-                override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ) = false
+
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     when (direction) {
                         ItemTouchHelper.RIGHT -> {
@@ -96,6 +102,14 @@ class MainActivity : AppCompatActivity(), IRouteGroupListener,
             adapter.submitList(groups)
         }
         itemTouchCallBack.attachToRecyclerView(binding.groupsRecycler)
+        binding.groupsRecycler.apply {
+            addItemDecoration(
+                DividerItemDecoration(
+                    this.context,
+                    (binding.groupsRecycler.layoutManager as LinearLayoutManager).orientation
+                )
+            )
+        }
         binding.fabAddRoute.setOnClickListener {
             RouteGroupDialog().show(supportFragmentManager, "add_route_group")
         }

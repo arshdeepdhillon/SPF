@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="grey">#959595</color>
-    <color name="teal">#FF018786</color>
-    <color name="light">#E6E6E6</color>
-    <color name="dark">#475267</color>
-    <color name="txt_dark">#FF000000</color>
-    <color name="txt_light">#E6E6E6</color>
+    <color name="grey_200">#bec6c9</color>
+    <color name="blue_50">#f1f9fc</color>
+    <color name="grey_500">#8e9598</color>
+    <color name="blue_100">#c0cde7</color>
+    <color name="cyan_50">#f3ffff</color>
+    <color name="dark_blue_200">#8f9cb5</color>
+    <color name="dark_grey_800">#424242</color>
     <color name="swipe_delete_color">#FF6464</color>
-    <color name="swipe_navigation_color">@color/teal</color>
-
+    <color name="swipe_navigation_color">#bec6c9</color>
 </resources>

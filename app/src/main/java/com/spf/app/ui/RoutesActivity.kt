@@ -63,7 +63,11 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
     /** Allows us to drag items in RecyclerView */
     private val itemTouchCallBack: ItemTouchHelper by lazy {
         val simpleItemTouchHelper = object : ItemTouchHelper.SimpleCallback(UP or DOWN, 0) {
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
                 val fromPos = viewHolder.bindingAdapterPosition
                 val toPos = target.bindingAdapterPosition
                 // Move item in `fromPos` to `toPos` in adapter.
@@ -186,10 +190,23 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
 
                 viewModel.getRoutesInGroupByOptWithoutCurrLocation(groupId)
                     .forEach { addresses.add(it.address) }
+//                    .forEach { addresses.add(it.address.toCamelCase()) }
                 val mapUrlStr = buildGoogleMapUrl(addresses)
                 launchMap(mapUrlStr)
             }
         }
+        //TODO for testing only
+        binding.fabNavigate.setOnLongClickListener(View.OnLongClickListener {
+            viewModel.viewModelScope.launch(Dispatchers.Default) {
+                val addresses: MutableList<String> = mutableListOf()
+                viewModel.getRoutesInGroupByOptWithoutCurrLocation(groupId)
+                    .forEach { addresses.add(it.address) }
+                val mapUrlStr = buildGoogleMapUrl(addresses)
+                launchMap(mapUrlStr)
+            }
+            true
+        })
+
         binding.routeGroupTitleEditText.setOnFocusChangeListener { v, hasFocus ->
             // On focus lost, save changes
             if (!hasFocus) {
@@ -388,7 +405,7 @@ class RoutesActivity : AppCompatActivity(), IRouteListener {
             .authority("maps.google.ca")
             .appendPath("maps")
             .appendQueryParameter("f", "d")
-            .appendQueryParameter("saddr", "My Location")
+            .appendQueryParameter("saddr", "Your location")
             // When adding waypoints (ie: '+to:'), 'daddr' acts as second waypoint instead of last waypoint.
             .appendQueryParameter("daddr", firstAddrs + "+to:" + addresses.joinToString(separator = "+to:") { it })
 

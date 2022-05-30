@@ -2,15 +2,20 @@
     <!-- Base application theme. -->
     <style name="Theme.SPF" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/dark</item>
-        <item name="colorPrimaryVariant">@color/dark</item>
-        <!--        <item name="colorOnPrimary">@color/bg_light</item>-->
+        <!--                <color name="primaryDarkColor">@color/grey_500</color>-->
+        <!--                <color name="secondaryDarkColor">@color/dark_blue_200</color>-->
+        <!--                <color name="primaryTextColor">@color/dark_grey_800</color>-->
+        <!--                <color name="secondaryTextColor">@color/dark_grey_800</color>-->
+        <item name="colorPrimary">@color/grey_500</item>
+        <item name="colorPrimaryVariant">@color/grey_500</item>
+
         <!-- Secondary brand color. -->
-        <!--        <item name="colorSecondary">@color/white</item>-->
-        <!--        <item name="colorSecondaryVariant">@color/teal</item>-->
-        <!--        <item name="colorOnSecondary">@color/black</item>-->
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="colorSecondary">@color/blue_100</item>
+        <item name="colorSecondaryVariant">@color/dark_blue_200</item>
+        <item name="colorOnSecondary">@color/dark_grey_800</item>
+
+        <!-- Must specify status bar color separately. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimary</item>
         <!-- Customize your theme here. -->
     </style>
 
